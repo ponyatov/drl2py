@@ -1,17 +1,28 @@
-Z_CLEARANCE = 11.11
+Z_END = 11.11
+Z_FAST = 2.2
+Z_SLOW = 0.5
+Z_DRILL = -2.5 
+
+FEED = .2
+SPEED = 16666
+
+CNC_IP = '192.168.255.18'
 
 import os,sys,re,time
 
 print sys.argv
 print 'NOW',time.localtime()[:6]
 
-DRL_FILE = 'Through.drl'
+DRL_FILE = sys.argv[1]
 DRL_FILE_H = open(DRL_FILE) ; print 'drill:',DRL_FILE
 SRC = DRL_FILE_H.readlines()
 DRL_FILE_H.close()
 
+BAT=open(re.sub(r'\.drl$',r'.bat',DRL_FILE),'w')
+print >>BAT,'rem',DRL_FILE,'\n'
+
 SVG_DX=SVG_DY=10
-SVG_FILE = DRL_FILE+'.svg'
+SVG_FILE = re.sub(r'\.drl',r'.svg',DRL_FILE)
 SVG = open(SVG_FILE,'w')
 print >>SVG,'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
@@ -22,21 +33,21 @@ print >>SVG,'''<?xml version="1.0" encoding="UTF-8"?>
      xmlns:xlink="http://www.w3.org/1999/xlink"
      xmlns:ev="http://www.w3.org/2001/xml-events"
      width="100%" height="100%">
-<rect x="'''+str(SVG_DX)+'''mm" y="'''+str(SVG_DY)+'''mm" width="80mm" height="50mm" fill="lightyellow" stroke="black" stroke-width="0.2mm"/>
 '''
 
 DRILLS={'00':'00.00'}
 DRILL=''
 
-FILLS={'00':'black','01':'red','02':'green','03':'blue'}
+FILLS={'00':'black','01':'red','02':'green','03':'blue','04':'magenta','05':'cyan','06':'brown','07':'darkyellow'}
 
-NC_FILE_H=open(DRL_FILE+'.nc','w')
+MINX=MINY=1e9
+MAXX=MAXY=-1e9
 
-def T_OPEN(TFN):
+NC_FILE_H=open('nul','w')
+def NC_OPEN(TFN):
     global NC_FILE_H ; NC_FILE_H=open(TFN,'w')
-T_OPEN(DRL_FILE+'.nc')
-def T_CLOSE():
-    NC_FILE_H.write('G0 Z%s\nM30\n%%\n'%Z_CLEARANCE)
+def NC_CLOSE():
+    NC_FILE_H.write('G0 Z%s\nM30\n%%\n'%Z_END)
     NC_FILE_H.close()
 
 SCALE=0
@@ -48,21 +59,27 @@ for i in SRC:
         print 'drill:',i[:-1]
         X,Y=re.findall(r'T(.+)C(.+)',i)[0] ; DRILL=X ; DRILLS[DRILL]=Y
     if re.match(r'^T\d+$',i):
-        NC_FILE='%s.%s.nc'%(DRL_FILE,i[:-1])
+        NC_FILE='%s_%s.nc'%(re.sub(r'\.drl$',r'',DRL_FILE),i[:-1])
         DRILL = re.findall(r'T(\d+)',i)[0] ; print 'DRILL',DRILL
         print 'file:',NC_FILE
-        T_CLOSE() ; T_OPEN(NC_FILE)
-        NC_FILE_H.write('%%\n%% drill: %s %s\n\n'%(DRILL,DRILLS[DRILL]))
+        NC_CLOSE() ; NC_OPEN(NC_FILE)
+        print >>NC_FILE_H,'%%\n( drill: )\n( T%s %s )\n\nM3 S%s\nG4 P2\nG0 Z%s\n\n'%(DRILL,DRILLS[DRILL],SPEED,Z_FAST)
+        print >>BAT,'\npause\n',r'\IMES\IMESc.exe',NC_FILE,CNC_IP
     if re.match(r'^X.+Y.+$',i):
-        X,Y=re.findall(r'X(.+)Y(.+)',i)[0]
-        X=float(X)/SCALE
-        Y=float(Y)/SCALE
+        X,Y=re.findall(r'X(.+)Y(.+)',i)[0] ; X,Y=map(lambda z:float(z)/SCALE,[X,Y])
         print i[:-1],X,Y
         print >>SVG,'<circle cx="%smm" cy="%smm" r="%smm" fill="%s"/>'%(X+SVG_DX,Y+SVG_DY,float(DRILLS[DRILL])/2,FILLS[DRILL])
+        MINX=min(MINX,X) ; MAXX=max(MAXX,X)
+        MINY=min(MINY,Y) ; MAXY=max(MAXY,Y)
+        print >>NC_FILE_H,'G0 X%s Y%s ( next hole )\nG1 Z%s F1 \nG1 Z%s F%s ( work )\nG1 Z%s F1\nG0 Z%s\n'%(X,Y,Z_SLOW,Z_DRILL,FEED,Z_SLOW,Z_FAST)
         
-T_CLOSE()
+NC_CLOSE()
 
+print MINX,MINY,'..',MAXX,MAXY
+print >>SVG,'<rect x="%smm" y="%smm" width="%smm" height="%smm" fill="none" stroke="black" stroke-width="0.2mm"/>'%(MINX-5+SVG_DX,MINY-5+SVG_DY,abs(MINX-MAXX)+10,abs(MINY-MAXY)+10)
 print >>SVG,'</svg>'
 SVG.close()
+
+BAT.close()
 
 print '.'
