@@ -4,7 +4,7 @@ Z_SLOW = 1.1
 Z_DRILL = -2.5 
 
 FEED = .1
-SPEED = 16666
+SPEED = 22222
 
 CNC_IP = '192.168.255.18'
 
