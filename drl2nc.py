@@ -1,9 +1,9 @@
 Z_END = 11.11
 Z_FAST = 2.2
-Z_SLOW = 0.5
+Z_SLOW = 1.1
 Z_DRILL = -2.5 
 
-FEED = .2
+FEED = .1
 SPEED = 16666
 
 CNC_IP = '192.168.255.18'
@@ -19,6 +19,7 @@ SRC = DRL_FILE_H.readlines()
 DRL_FILE_H.close()
 
 BAT=open(re.sub(r'\.drl$',r'.bat',DRL_FILE),'w')
+BAT_NCS={}
 print >>BAT,'rem',DRL_FILE,'\n'
 
 SVG_DX=SVG_DY=10
@@ -45,7 +46,10 @@ MAXX=MAXY=-1e9
 
 NC_FILE_H=open('nul','w')
 def NC_OPEN(TFN):
+    print 'file:',TFN
     global NC_FILE_H ; NC_FILE_H=open(TFN,'w')
+    global BAT_NCS ; BAT_NCS[TFN]=1
+
 def NC_CLOSE():
     NC_FILE_H.write('G0 Z%s\nM30\n%%\n'%Z_END)
     NC_FILE_H.close()
@@ -61,10 +65,8 @@ for i in SRC:
     if re.match(r'^T\d+$',i):
         NC_FILE='%s_%s.nc'%(re.sub(r'\.drl$',r'',DRL_FILE),i[:-1])
         DRILL = re.findall(r'T(\d+)',i)[0] ; print 'DRILL',DRILL
-        print 'file:',NC_FILE
         NC_CLOSE() ; NC_OPEN(NC_FILE)
         print >>NC_FILE_H,'%%\n( drill: )\n( T%s %s )\n\nM3 S%s\nG4 P2\nG0 Z%s\n\n'%(DRILL,DRILLS[DRILL],SPEED,Z_FAST)
-        print >>BAT,'\npause\n',r'\IMES\IMESc.exe',NC_FILE,CNC_IP
     if re.match(r'^X.+Y.+$',i):
         X,Y=re.findall(r'X(.+)Y(.+)',i)[0] ; X,Y=map(lambda z:float(z)/SCALE,[X,Y])
         print i[:-1],X,Y
@@ -72,13 +74,17 @@ for i in SRC:
         MINX=min(MINX,X) ; MAXX=max(MAXX,X)
         MINY=min(MINY,Y) ; MAXY=max(MAXY,Y)
         print >>NC_FILE_H,'G0 X%s Y%s ( next hole )\nG1 Z%s F1 \nG1 Z%s F%s ( work )\nG1 Z%s F1\nG0 Z%s\n'%(X,Y,Z_SLOW,Z_DRILL,FEED,Z_SLOW,Z_FAST)
-        
+
+print >>NC_FILE_H,'G1 X%s Y%x F0.01\nG1 X%s Y%s F0.01\n'%(MINX,MINY,MAXX,MAXY)        
 NC_CLOSE()
 
 print MINX,MINY,'..',MAXX,MAXY
 print >>SVG,'<rect x="%smm" y="%smm" width="%smm" height="%smm" fill="none" stroke="black" stroke-width="0.2mm"/>'%(MINX-5+SVG_DX,MINY-5+SVG_DY,abs(MINX-MAXX)+10,abs(MINY-MAXY)+10)
 print >>SVG,'</svg>'
 SVG.close()
+
+for i in sorted(BAT_NCS.keys()):
+    print >>BAT,'\npause\n',r'\IMES\IMESc.exe',i,CNC_IP
 
 BAT.close()
 
