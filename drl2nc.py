@@ -70,7 +70,7 @@ for i in SRC:
     if re.match(r'^X.+Y.+$',i):
         X,Y=re.findall(r'X(.+)Y(.+)',i)[0] ; X,Y=map(lambda z:float(z)/SCALE,[X,Y])
         print i[:-1],X,Y
-        print >>SVG,'<circle cx="%smm" cy="%smm" r="%smm" fill="%s"/>'%(X+SVG_DX,Y+SVG_DY,float(DRILLS[DRILL])/2,FILLS[DRILL])
+        print >>SVG,'<circle cx="%smm" cy="%smm" r="%smm" fill="%s"/>'%(X+SVG_DX,100-Y+SVG_DY,float(DRILLS[DRILL])/2,FILLS[DRILL])
         MINX=min(MINX,X) ; MAXX=max(MAXX,X)
         MINY=min(MINY,Y) ; MAXY=max(MAXY,Y)
         print >>NC_FILE_H,'G0 X%s Y%s ( next hole )\nG1 Z%s F1 \nG1 Z%s F%s ( work )\nG1 Z%s F1\nG0 Z%s\n'%(X,Y,Z_SLOW,Z_DRILL,FEED,Z_SLOW,Z_FAST)
@@ -79,7 +79,7 @@ print >>NC_FILE_H,'G1 X%s Y%x F0.01\nG1 X%s Y%s F0.01\n'%(MINX,MINY,MAXX,MAXY)
 NC_CLOSE()
 
 print MINX,MINY,'..',MAXX,MAXY
-print >>SVG,'<rect x="%smm" y="%smm" width="%smm" height="%smm" fill="none" stroke="black" stroke-width="0.2mm"/>'%(MINX-5+SVG_DX,MINY-5+SVG_DY,abs(MINX-MAXX)+10,abs(MINY-MAXY)+10)
+#print >>SVG,'<rect x="%smm" y="%smm" width="%smm" height="%smm" fill="none" stroke="black" stroke-width="0.2mm"/>'%(MINX-5+SVG_DX,MINY-5+SVG_DY,abs(MINX-MAXX)+10,abs(MINY-MAXY)+10)
 print >>SVG,'</svg>'
 SVG.close()
 
