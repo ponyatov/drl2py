@@ -76,9 +76,12 @@ SVG.close()
 print BITS
 print
 for i in sorted(HOLES):
+    raw_input('-')
     NCFNAME='%s.nc'%i
     F=open(NCFNAME,'w')
-    print >>F,'%%\n( T[%s] drill %s )\n'%(i,BITS[i])
+    HEADLINE = '%%\n( T[%s] drill %s )\n'%(i,BITS[i])
+    print HEADLINE 
+    print >>F, HEADLINE
     print >>F,'G0 Z%s\nM3 S%s\nG4 P2\nG0 Z%s'%(Z_END,SPEED,Z_FAST)
     for j in HOLES[i]:
         print >>F,'\nG0 %s\nG0 Z%s\nG1 Z%s F%s\nG1 Z%s F%s\nG0 Z%s'%(j,Z_SLOW,Z_DRILL,FEED_IN,Z_SLOW,FEED_OUT,Z_FAST)
@@ -87,6 +90,5 @@ for i in sorted(HOLES):
     CMD=r'\IMES\IMESc.exe %s %s'%(NCFNAME,CNC_IP)
     print 'CMD:',CMD,
     print os.system(CMD)
-    raw_input('-')
 
 raw_input('.')
