@@ -1,10 +1,10 @@
 # -*- coding: cp1251 -*-
 
-DRL = r'\\arhive\Public\ponyatov\Рязанов\15.09.2014\EMAB1.drl'
-DRL = r'EMA_B_1.drl'
-DRL = r'Through.drl'
+DRL = r'\\arhive\Public\ponyatov\Рязанов\15.09.2014\I-all_holes.drl'
 
 SVG_MAX_Y = 222
+
+R_DELTA = 0.5#e-6
 
 CNC_IP = '192.168.255.18'
 
@@ -56,8 +56,15 @@ for i in DRL_F.readlines():
         X1,X2,Y1,Y2=re.findall(REX_COORD,i)[0]
         X='%s.%s'%(X1,X2)
         Y='%s.%s'%(Y1,Y2)
-        R=max(0.5,float(BITS[CURRENT])/2)
-        print >>SVG,'<circle cx="%smm" cy="%smm" r="%smm" fill="black"/>'%(X,SVG_MAX_Y-float(Y),R)
+        R=max(R_DELTA,float(BITS[CURRENT])/2)
+        COLOR='black'
+        if R*2>.5:
+            COLOR='green'
+        if R*2>1:
+            COLOR='blue'
+        if abs(R*2-1.111)<1e-6:
+            COLOR='red'
+        print >>SVG,'<circle cx="%smm" cy="%smm" r="%smm" fill="%s"/>'%(X,SVG_MAX_Y-float(Y),R,COLOR)
         T='X %s Y %s'%(X,Y)
         try:
             HOLES[CURRENT]+=[T]
