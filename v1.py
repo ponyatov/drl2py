@@ -1,14 +1,16 @@
 # -*- coding: cp1251 -*-
 
 DRL = r'\\arhive\Public\ponyatov\Рязанов\15.09.2014\EMAB1.drl'
+DRL = r'EMA_B_1.drl'
+DRL = r'Through.drl'
 
 SVG_MAX_Y = 222
 
 CNC_IP = '192.168.255.18'
 
-SPEED = 22222
-FEED_IN = 0.1
-FEED_OUT = 1.0
+S_SPEED = 22222
+F_FEED_IN = 0.1
+F_FEED_OUT = 1.0
 Z_END = 55.55
 Z_FAST = 2.2
 Z_SLOW = 1.1
@@ -82,9 +84,9 @@ for i in sorted(HOLES):
     HEADLINE = '%%\n( T[%s] drill %s )\n'%(i,BITS[i])
     print HEADLINE 
     print >>F, HEADLINE
-    print >>F,'G0 Z%s\nM3 S%s\nG4 P2\nG0 Z%s'%(Z_END,SPEED,Z_FAST)
+    print >>F,'G0 Z%s\nM3 S%s\nG4 P2\nG0 Z%s'%(Z_END,S_SPEED,Z_FAST)
     for j in HOLES[i]:
-        print >>F,'\nG0 %s\nG0 Z%s\nG1 Z%s F%s\nG1 Z%s F%s\nG0 Z%s'%(j,Z_SLOW,Z_DRILL,FEED_IN,Z_SLOW,FEED_OUT,Z_FAST)
+        print >>F,'\nG0 %s\nG0 Z%s\nG1 Z%s F%s\nG1 Z%s F%s\nG0 Z%s'%(j,Z_SLOW,Z_DRILL,F_FEED_IN,Z_SLOW,F_FEED_OUT,Z_FAST)
     print >>F,'\nG0 Z%s\nM30\n%%'%Z_END
     F.close()
     CMD=r'\IMES\IMESc.exe %s %s'%(NCFNAME,CNC_IP)
