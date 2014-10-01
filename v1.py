@@ -1,6 +1,10 @@
 # -*- coding: cp1251 -*-
 
-DRL = r'\\arhive\Public\ponyatov\Рязанов\15.09.2014\I-all_holes.drl'
+# цифр после запятой в формате Excellon
+NPP = 2
+
+DRL = r'\\arhive\Public\Ponyatov\Рязанов\15.09.2014\IV-all_holes.drl'
+DRL = r'C:\w\drl2py\140930\drl.drl'
 
 SVG_MAX_Y = 222
 
@@ -11,7 +15,7 @@ CNC_IP = '192.168.255.18'
 S_SPEED = 22222
 F_FEED_IN = 0.1
 F_FEED_OUT = 1.0
-Z_END = 55.55
+Z_END = 111.111
 Z_FAST = 2.2
 Z_SLOW = 1.1
 Z_DRILL = -2.5
@@ -40,8 +44,15 @@ BITS={'00':'0.0',None:'0.0'}
 
 REX_BIT=r'^T(\d+)C(.+)\n$'
 REX_SET=r'^T(\d+)\n$'
-REX_COORD = r'^X(.+)(\d{2})Y(.+)(\d{2})\n$'
+
+REX_COORD=''
+def UPD_REX_COORD():
+    global REX_COORD
+    REX_COORD = r'^X(.+)(\d{%s})Y(.+)(\d{%s})\n$'%(NPP,NPP)
+UPD_REX_COORD()
+    
 REX_IGNORE = r'^(%|M48|M30)\n$'
+REX_FORMAT = r'(; Format: \d+\.)(\d+)(\s+.+)'
 
 HOLES={}
 CURRENT=None
@@ -56,20 +67,29 @@ for i in DRL_F.readlines():
         X1,X2,Y1,Y2=re.findall(REX_COORD,i)[0]
         X='%s.%s'%(X1,X2)
         Y='%s.%s'%(Y1,Y2)
-        R=max(R_DELTA,float(BITS[CURRENT])/2)
+        R=float(BITS[CURRENT])/2
         COLOR='black'
         if R*2>.5:
             COLOR='green'
         if R*2>1:
             COLOR='blue'
         if abs(R*2-1.111)<1e-6:
+            COLOR='magenta'
+        if abs(R*2-3.175)<1e-6:
             COLOR='red'
+        if abs(R*2-0.4)<1e-6:
+            COLOR='red'
+        R=max(R_DELTA,R)
         print >>SVG,'<circle cx="%smm" cy="%smm" r="%smm" fill="%s"/>'%(X,SVG_MAX_Y-float(Y),R,COLOR)
         T='X %s Y %s'%(X,Y)
         try:
             HOLES[CURRENT]+=[T]
         except KeyError:
             HOLES[CURRENT] =[T]
+    elif re.match(REX_FORMAT,i):
+        NPP=int( re.findall(REX_FORMAT,i)[0][1] )
+        UPD_REX_COORD()
+        print 'FORMAT:',i[:-1],'NPP=',NPP
     elif re.match(REX_IGNORE,i):
         pass
     else:
