@@ -3,8 +3,13 @@
 # цифр после запятой в формате Excellon
 NPP = 2
 
-DRL = r'\\arhive\Public\Ponyatov\Рязанов\15.09.2014\IV-all_holes.drl'
-DRL = r'C:\w\drl2py\140930\drl.drl'
+DRL = r'\\arhive\Public\Ponyatov\Рязанов\11.02.2015\11022015(0.5-по краю).drl'
+DRL = r'\\arhive\Public\Ponyatov\Рязанов\12.02.2015\0.4 по контуру.drl'
+
+DRL = r'\\arhive\Public\Ponyatov\Рязанов\24.02.2015\Through (0.4 по контуру).drl'
+DRL = r'\\arhive\Public\Ponyatov\Рязанов\24.02.2015\Through (0.4 по контуру)_3.drl'
+# # large
+DRL = r'\\arhive\Public\Ponyatov\Рязанов\24.02.2015\Through (0.4 по контуру)_2.drl'
 
 SVG_MAX_Y = 222
 
